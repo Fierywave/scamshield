@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 
+from app.rules import run_rules
+
 app = FastAPI(title="ScamShield API")
 engine = create_engine(os.environ["DATABASE_URL"])
 
@@ -26,10 +28,20 @@ def health():
 @app.post("/analyze")
 def analyze(req: AnalyzeRequest):
     p = float(clf.predict_proba(vec.transform([req.text]))[0][1])
-    if p >= 0.7:
+    reasons = run_rules(req.text)
+    strong = [r for r in reasons if "imitates" in r or "secret" in r]
+    score = min(1.0, p + 0.08 * len(reasons))
+    if strong:
+        score = max(score, 0.7)
+    if score >= 0.7:
         verdict = "scam"
-    elif p >= 0.4:
+    elif score >= 0.4:
         verdict = "suspicious"
     else:
         verdict = "likely safe"
-    return {"scam_probability": round(p, 3), "verdict": verdict}
+    return {
+        "verdict": verdict,
+        "score": round(score, 3),
+        "ml_probability": round(p, 3),
+        "reasons": reasons,
+    }
