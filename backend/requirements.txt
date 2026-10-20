@@ -2,3 +2,5 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 psycopg[binary]
+scikit-learn==1.9.1
+joblib

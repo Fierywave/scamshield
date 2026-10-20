@@ -13,7 +13,7 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql://scamshield:scamshield@db:5432/scamshield
+      DATABASE_URL: postgresql+psycopg://scamshield:scamshield@db:5432/scamshield
     ports:
       - "8000:8000"
     volumes:
