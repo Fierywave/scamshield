@@ -4,3 +4,7 @@ sqlalchemy
 psycopg[binary]
 scikit-learn==1.9.1
 joblib
+xgboost==3.4.1
+numpy
+pandas
+redis
