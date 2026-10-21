@@ -9,8 +9,11 @@ from sqlalchemy import create_engine, text
 
 from app.rules import run_rules, URL_RE
 from app.url_features import url_features
+from app.trusted import is_trusted
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="ScamShield API")
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["*"], allow_headers=["*"])
 engine = create_engine(os.environ["DATABASE_URL"])
 
 MODELS = Path(__file__).parent / "models"
@@ -47,7 +50,7 @@ def analyze(req: AnalyzeRequest):
     reasons = run_rules(req.text)
 
     urls = URL_RE.findall(req.text)
-    url_results = [{"url": u, "probability": round(url_probability(u), 3)} for u in urls]
+    url_results = [{"url": u, "probability": 0.0 if is_trusted(u) else round(url_probability(u), 3)} for u in urls]
     worst = max((r["probability"] for r in url_results), default=0.0)
     if worst >= 0.7:
         reasons.append("Our link classifier rates this link as likely malicious.")
@@ -73,3 +76,4 @@ def analyze(req: AnalyzeRequest):
         "urls": url_results,
         "reasons": reasons,
     }
+
