@@ -4,9 +4,11 @@ import { useState } from "react";
 type Result = {
   verdict: string;
   score: number;
-  ml_probability: number;
   urls: { url: string; probability: number }[];
   reasons: string[];
+  report_id: number;
+  case_id: number | null;
+  case_size: number;
 };
 
 const COLORS: Record<string, string> = {
@@ -26,7 +28,7 @@ export default function Home() {
     setError("");
     setResult(null);
     try {
-      const res = await fetch("http://localhost:8000/analyze", {
+      const res = await fetch("http://localhost:8000/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
@@ -50,13 +52,17 @@ export default function Home() {
         style={{ width: "100%", padding: 10, fontSize: 16, boxSizing: "border-box", background: "#fff", color: "#111", border: "1px solid #999" }}
         placeholder="Paste message here..."
       />
+      <p style={{ fontSize: 13, color: "#555" }}>
+        Messages you submit are saved so analysts can link related scams. Phone and account numbers are masked before saving. Please do not paste passwords or OTPs.
+      </p>
       <button
         onClick={analyze}
         disabled={loading || !text.trim()}
-        style={{ marginTop: 10, padding: "10px 20px", fontSize: 16, cursor: "pointer" }}
+        style={{ padding: "10px 20px", fontSize: 16, cursor: "pointer" }}
       >
         {loading ? "Analyzing..." : "Analyze"}
       </button>
+      <a href="/cases" style={{ marginLeft: 16 }}>Analyst dashboard</a>
 
       {error && <p style={{ color: "#c62828" }}>{error}</p>}
 
@@ -66,6 +72,15 @@ export default function Home() {
             {result.verdict}
           </h2>
           <p>Risk score: {Math.round(result.score * 100)} / 100</p>
+
+          {result.case_id && (
+            <p style={{ background: "#fff3e0", padding: 8, borderRadius: 6 }}>
+              {result.case_size > 1
+                ? `Linked to case #${result.case_id}: ${result.case_size} reports share evidence with this message.`
+                : `Opened new case #${result.case_id} for analyst review.`}
+            </p>
+          )}
+
           {result.reasons.length > 0 && (
             <>
               <strong>Why:</strong>

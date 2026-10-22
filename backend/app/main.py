@@ -126,6 +126,14 @@ def extract_entities(t):
     return ents
 
 
+PHONE_RE = re.compile(r"(?<!\d)(?:\+91[\s-]?)?[6-9]\d{9}(?!\d)")
+LONGNUM_RE = re.compile(r"(?<!\d)\d{9,18}(?!\d)")
+
+
+def mask_pii(t):
+    t = PHONE_RE.sub("[phone]", t)
+    return LONGNUM_RE.sub("[number]", t)
+
 class AnalyzeRequest(BaseModel):
     text: str
 
@@ -156,7 +164,7 @@ def create_report(req: AnalyzeRequest):
         rid = conn.execute(
             text("INSERT INTO reports (text, verdict, score, reasons) "
                  "VALUES (:t, :v, :s, :r) RETURNING id"),
-            {"t": req.text, "v": result["verdict"], "s": result["score"],
+            {"t": mask_pii(req.text), "v": result["verdict"], "s": result["score"],
              "r": json.dumps(result["reasons"])},
         ).scalar()
         for kind, value in ents:
@@ -259,3 +267,4 @@ def update_case(case_id: int, body: StatusUpdate):
     if not n:
         raise HTTPException(404, "Case not found")
     return {"id": case_id, "status": body.status}
+
