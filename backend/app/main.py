@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 
 from app.auth import router as auth_router, require_analyst, log_action
+from app.metrics import router as metrics_router
 from app.rules import run_rules, URL_RE
 from app.trusted import is_trusted
 from app.url_features import url_features
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 engine = create_engine(os.environ["DATABASE_URL"])
 app.include_router(auth_router)
+app.include_router(metrics_router)
 
 MODELS = Path(__file__).parent / "models"
 vec, clf = joblib.load(MODELS / "combined.joblib")
@@ -272,4 +274,5 @@ def update_case(case_id: int, body: StatusUpdate, user=Depends(require_analyst))
         raise HTTPException(404, "Case not found")
     log_action(user["email"], "set_status", case_id, "status set to " + body.status)
     return {"id": case_id, "status": body.status}
+
 
