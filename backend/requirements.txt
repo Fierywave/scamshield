@@ -8,3 +8,6 @@ xgboost==3.4.1
 numpy
 pandas
 redis
+
+pyjwt
+bcrypt

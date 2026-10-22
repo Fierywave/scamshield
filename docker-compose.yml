@@ -19,6 +19,7 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: postgresql+psycopg://scamshield:scamshield@db:5432/scamshield
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8000:8000"
     volumes:
@@ -31,6 +32,7 @@ services:
     command: python -m app.worker
     environment:
       DATABASE_URL: postgresql+psycopg://scamshield:scamshield@db:5432/scamshield
+      JWT_SECRET: ${JWT_SECRET}
       REDIS_URL: redis://redis:6379/0
     volumes:
       - ./backend/app:/app/app
@@ -41,3 +43,4 @@ services:
 
 volumes:
   pgdata:
+

@@ -10,6 +10,24 @@ type Detail = {
 };
 
 const API = "http://localhost:8000";
+
+async function authFetch(url: string, init: RequestInit = {}) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "/login";
+    throw new Error("not logged in");
+  }
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...(init.headers || {}), Authorization: "Bearer " + token },
+  });
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("session expired");
+  }
+  return res;
+}
 const STATUS_COLORS: Record<string, string> = {
   under_review: "#ef6c00",
   confirmed: "#c62828",
@@ -23,8 +41,10 @@ export default function Cases() {
 
   async function loadCases() {
     try {
-      const res = await fetch(API + "/cases");
-      setCases(await res.json());
+      const res = await authFetch(API + "/cases");
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data)) throw new Error("bad response");
+      setCases(data);
       setError("");
     } catch {
       setError("Could not reach the API. Is Docker running?");
@@ -32,12 +52,12 @@ export default function Cases() {
   }
 
   async function open(id: number) {
-    const res = await fetch(API + "/cases/" + id);
+    const res = await authFetch(API + "/cases/" + id);
     setDetail(await res.json());
   }
 
   async function setStatus(id: number, status: string) {
-    await fetch(API + "/cases/" + id, {
+    await authFetch(API + "/cases/" + id, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -129,3 +149,5 @@ export default function Cases() {
     </main>
   );
 }
+
+

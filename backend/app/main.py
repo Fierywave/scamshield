@@ -7,11 +7,12 @@ from urllib.parse import urlparse
 
 import joblib
 import scipy.sparse as sp
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 
+from app.auth import router as auth_router, require_analyst, log_action
 from app.rules import run_rules, URL_RE
 from app.trusted import is_trusted
 from app.url_features import url_features
@@ -24,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 engine = create_engine(os.environ["DATABASE_URL"])
+app.include_router(auth_router)
 
 MODELS = Path(__file__).parent / "models"
 vec, clf = joblib.load(MODELS / "combined.joblib")
@@ -134,6 +136,7 @@ def mask_pii(t):
     t = PHONE_RE.sub("[phone]", t)
     return LONGNUM_RE.sub("[number]", t)
 
+
 class AnalyzeRequest(BaseModel):
     text: str
 
@@ -217,7 +220,7 @@ def create_report(req: AnalyzeRequest):
 
 
 @app.get("/cases")
-def list_cases():
+def list_cases(user=Depends(require_analyst)):
     with engine.connect() as conn:
         rows = conn.execute(text(
             "SELECT c.id, c.status, c.created_at, count(r.id) AS reports, "
@@ -229,7 +232,7 @@ def list_cases():
 
 
 @app.get("/cases/{case_id}")
-def get_case(case_id: int):
+def get_case(case_id: int, user=Depends(require_analyst)):
     with engine.connect() as conn:
         case = conn.execute(
             text("SELECT id, status, created_at FROM cases WHERE id = :c"), {"c": case_id}
@@ -252,11 +255,12 @@ def get_case(case_id: int):
         d = dict(r)
         d["reasons"] = json.loads(d["reasons"] or "[]")
         out.append(d)
+    log_action(user["email"], "viewed_case", case_id)
     return {**dict(case), "reports": out, "shared_evidence": [dict(s) for s in shared]}
 
 
 @app.patch("/cases/{case_id}")
-def update_case(case_id: int, body: StatusUpdate):
+def update_case(case_id: int, body: StatusUpdate, user=Depends(require_analyst)):
     if body.status not in ("under_review", "confirmed", "rejected"):
         raise HTTPException(400, "Status must be under_review, confirmed, or rejected")
     with engine.begin() as conn:
@@ -266,5 +270,6 @@ def update_case(case_id: int, body: StatusUpdate):
         ).rowcount
     if not n:
         raise HTTPException(404, "Case not found")
+    log_action(user["email"], "set_status", case_id, "status set to " + body.status)
     return {"id": case_id, "status": body.status}
 
