@@ -28,7 +28,7 @@ export default function Home() {
     setError("");
     setResult(null);
     try {
-      const res = await fetch("http://localhost:8000/reports", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
@@ -107,3 +107,5 @@ export default function Home() {
     </main>
   );
 }
+
+

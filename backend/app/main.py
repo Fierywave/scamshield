@@ -21,7 +21,7 @@ from app.url_features import url_features
 app = FastAPI(title="ScamShield API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -274,5 +274,7 @@ def update_case(case_id: int, body: StatusUpdate, user=Depends(require_analyst))
         raise HTTPException(404, "Case not found")
     log_action(user["email"], "set_status", case_id, "status set to " + body.status)
     return {"id": case_id, "status": body.status}
+
+
 
 

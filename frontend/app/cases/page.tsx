@@ -9,7 +9,7 @@ type Detail = {
   shared_evidence: { kind: string; value: string; reports: number }[];
 };
 
-const API = "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function authFetch(url: string, init: RequestInit = {}) {
   const token = localStorage.getItem("token");
@@ -149,5 +149,7 @@ export default function Cases() {
     </main>
   );
 }
+
+
 
 
