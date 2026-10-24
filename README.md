@@ -43,7 +43,10 @@ The model alone missed an unseen fraud pattern (3% recall); the rules missed ano
 |---|---|---|---|
 | 100 tx/s | about 100 | 4 ms | 35 ms |
 | 500 tx/s | 501 | 9.5 ms | 53 ms |
-| 1000 tx/s | (fill in) | (fill in) | (fill in) |
+| 1000 tx/s | 1005 | 19.3 ms | 114 ms |
+| 2000 tx/s (requested) | 1258 | 24.6 ms | 101 ms |
+
+The 2000 tx/s run was limited by the single-process producer (it reached only 1,258 tx/s), so it is not a measure of the worker's maximum.
 
 ## Limitations
 - Transaction data is simulated; fraud patterns were written by me, so results show how well the system learns those patterns, not real-world bank performance.
@@ -53,3 +56,4 @@ The model alone missed an unseen fraud pattern (3% recall); the rules missed ano
 - Personal-data masking covers phone and long account numbers only, not names or addresses.
 - No login rate limiting; `/reports` is open and unthrottled.
 - Message training data is small and partly self-labeled.
+
