@@ -62,7 +62,6 @@ export default function Home() {
       >
         {loading ? "Analyzing..." : "Analyze"}
       </button>
-      <a href="/cases" style={{ marginLeft: 16 }}>Analyst dashboard</a>
 
       {error && <p style={{ color: "#c62828" }}>{error}</p>}
 
@@ -107,5 +106,6 @@ export default function Home() {
     </main>
   );
 }
+
 
 
