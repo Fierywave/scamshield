@@ -2,7 +2,7 @@
 
 A fraud-defense platform for India: checks suspicious messages and links, scores a simulated transaction stream in real time, and links related reports into cases for analyst review.
 
-**Live demo:** (add link after deployment)
+**Live demo:** https://scamshield-mukesh.duckdns.org
 
 ## What it does
 1. **Message and link checker:** rules + ML classifiers give a verdict with reasons.
@@ -48,6 +48,8 @@ The model alone missed an unseen fraud pattern (3% recall); the rules missed ano
 
 The 2000 tx/s run was limited by the single-process producer (it reached only 1,258 tx/s), so it is not a measure of the worker's maximum.
 
+Deployed on an AWS t3.small (2 GB RAM): the same 5,763 simulated transactions replayed at 100 tx/s scored with p50 3.3 ms and p99 14.7 ms, with precision 0.787 and recall 0.987 matching the local run.
+
 ## Limitations
 - Transaction data is simulated; fraud patterns were written by me, so results show how well the system learns those patterns, not real-world bank performance.
 - Rules were written knowing the simulated patterns, so their results are not independent.
@@ -56,4 +58,5 @@ The 2000 tx/s run was limited by the single-process producer (it reached only 1,
 - Personal-data masking covers phone and long account numbers only, not names or addresses.
 - No login rate limiting; `/reports` is open and unthrottled.
 - Message training data is small and partly self-labeled.
+
 
